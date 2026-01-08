@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from .cases import EVIDENCE
+from ..engines.timeline.builder import build_timeline
+from ..engines.timeline.origin import infer_origin
 from ..engines.similarity.matcher import compare_phashes
 import cv2
 import os
@@ -83,4 +85,14 @@ def check_similarity(case_id: str):
         "similar_matches": matches
     }
 
+@router.get("/timeline")
+def get_timeline():
+    timeline = build_timeline(EVIDENCE)
+    origin = infer_origin(timeline)
+
+    return {
+        "total_events": len(timeline),
+        "origin_candidate": origin,
+        "timeline": timeline
+    }
 
