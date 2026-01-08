@@ -7,6 +7,9 @@ from ..engines.behaviour.fingerprint import build_behavior_fingerprints
 from ..engines.similarity.matcher import compare_phashes
 from ..engines.graph.builder import build_investigation_graph
 from ..engines.graph.analysis import analyze_graph
+from ..services.report_generator import generate_case_report
+from ..utils.serialization import to_python
+
 import cv2
 import os
 import numpy as np
@@ -46,7 +49,7 @@ def deepfake_trigger(video_path: str):
         reasons.append("no strong manipulation indicators")
 
     return round(score, 2), reasons
-
+import numpy as np
 
 @router.post("/deepfake/{case_id}")
 def run_deepfake(case_id: str):
@@ -137,6 +140,59 @@ def get_graph():
         "nodes": nodes,
         "edges": edges
     }
+
+@router.get("/report/{case_id}")
+def generate_report(case_id: str):
+    if case_id not in EVIDENCE:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    # Reuse existing analysis endpoints internally (simple approach)
+    deepfake = None
+    similarity = None
+
+    # Deepfake (if evidence exists)
+    try:
+        from .analysis import run_deepfake
+        deepfake = run_deepfake(case_id)
+    except Exception:
+        pass
+
+    # Similarity
+    try:
+        from .analysis import check_similarity
+        similarity = check_similarity(case_id)
+    except Exception:
+        pass
+
+    # Timeline
+    try:
+        timeline = get_timeline()
+    except Exception:
+        timeline = None
+
+    # Behavior
+    try:
+        behavior = analyze_behavior()
+    except Exception:
+        behavior = None
+
+    # Graph
+    try:
+        graph = get_graph()
+    except Exception:
+        graph = None
+
+    report = generate_case_report(
+        case_id=case_id,
+        evidences=EVIDENCE,
+        deepfake_result=deepfake,
+        similarity_result=similarity,
+        timeline_result=timeline,
+        behavior_result=behavior,
+        graph_result=graph
+    )
+
+    return report
 
 
 
