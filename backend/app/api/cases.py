@@ -45,7 +45,8 @@ EVIDENCE_DIR = os.path.join(BASE_DIR, "data", "evidence")
 os.makedirs(EVIDENCE_DIR, exist_ok=True)
 
 @router.post("/{case_id}/evidence")
-async def upload_evidence(case_id: str, file: UploadFile = File(...)):
+async def upload_evidence(case_id: str, file: UploadFile = File(...),username: str | None = None,
+    platform: str | None = None):
     # 1 Check case exists
     if not any(case.id == case_id for case in CASES_DB):
         raise HTTPException(status_code=404, detail="Case not found")
@@ -74,7 +75,9 @@ async def upload_evidence(case_id: str, file: UploadFile = File(...)):
         "stored_path": stored_path,
         "sha256": sha256_hash,
         "phashes": phashes,
-        "uploaded_at": datetime.utcnow().isoformat()
+        "uploaded_at": datetime.utcnow().isoformat(),
+        "username": username,
+        "platform": platform
     }
 
     # 8 Store in memory

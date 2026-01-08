@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from .cases import EVIDENCE
 from ..engines.timeline.builder import build_timeline
 from ..engines.timeline.origin import infer_origin
+from ..engines.behaviour.cluster import cluster_accounts
+from ..engines.behaviour.fingerprint import build_behavior_fingerprints
 from ..engines.similarity.matcher import compare_phashes
 import cv2
 import os
@@ -95,4 +97,16 @@ def get_timeline():
         "origin_candidate": origin,
         "timeline": timeline
     }
+
+@router.get("/behavior")
+def analyze_behavior():
+    fingerprints = build_behavior_fingerprints(EVIDENCE)
+    clusters = cluster_accounts(fingerprints)
+
+    return {
+        "total_accounts": len(fingerprints),
+        "suspicious_clusters": clusters,
+        "fingerprints": fingerprints
+    }
+
 
