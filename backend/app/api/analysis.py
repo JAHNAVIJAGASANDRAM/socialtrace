@@ -5,6 +5,8 @@ from ..engines.timeline.origin import infer_origin
 from ..engines.behaviour.cluster import cluster_accounts
 from ..engines.behaviour.fingerprint import build_behavior_fingerprints
 from ..engines.similarity.matcher import compare_phashes
+from ..engines.graph.builder import build_investigation_graph
+from ..engines.graph.analysis import analyze_graph
 import cv2
 import os
 import numpy as np
@@ -108,5 +110,33 @@ def analyze_behavior():
         "suspicious_clusters": clusters,
         "fingerprints": fingerprints
     }
+
+@router.get("/graph")
+def get_graph():
+    graph = build_investigation_graph(EVIDENCE)
+    central_nodes = analyze_graph(graph)
+
+    nodes = [
+        {"id": n, "type": graph.nodes[n]["type"]}
+        for n in graph.nodes
+    ]
+
+    edges = [
+        {
+            "source": u,
+            "target": v,
+            "relation": d["relation"]
+        }
+        for u, v, d in graph.edges(data=True)
+    ]
+
+    return {
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+        "central_nodes": central_nodes,
+        "nodes": nodes,
+        "edges": edges
+    }
+
 
 
