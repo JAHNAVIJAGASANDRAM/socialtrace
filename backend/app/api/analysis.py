@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from .cases import EVIDENCE
+from ..engines.similarity.matcher import compare_phashes
 import cv2
 import os
 import numpy as np
@@ -58,4 +59,28 @@ def run_deepfake(case_id: str):
         "deepfake_score": score,
         "indicators": reasons
     }
+@router.post("/similarity/{case_id}")
+def check_similarity(case_id: str):
+    if case_id not in EVIDENCE:
+        raise HTTPException(status_code=404, detail="No evidence found")
+
+    current = EVIDENCE[case_id][0]
+    matches = []
+
+    for other_case, evidences in EVIDENCE.items():
+        if other_case == case_id:
+            continue
+
+        for ev in evidences:
+            if compare_phashes(current["phashes"], ev.get("phashes", [])):
+                matches.append({
+                    "matched_case": other_case,
+                    "matched_file": ev["original_filename"]
+                })
+
+    return {
+        "case_id": case_id,
+        "similar_matches": matches
+    }
+
 
