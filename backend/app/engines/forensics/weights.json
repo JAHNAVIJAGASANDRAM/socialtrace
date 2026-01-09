@@ -1,0 +1,8 @@
+{
+  "cnn": 0.45,
+  "visual": 0.45,
+  "temporal": 0.35,
+  "frequency": 0.20,
+  "lighting": 0.20,
+  "metadata": 0.10
+}

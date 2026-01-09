@@ -9,12 +9,17 @@ from ..engines.graph.builder import build_investigation_graph
 from ..engines.graph.analysis import analyze_graph
 from ..services.report_generator import generate_case_report
 from ..utils.serialization import to_python
+from ..engines.forensics.controller import analyze_media
 
 import cv2
 import os
 import numpy as np
 
 router = APIRouter()
+
+
+# with deepfake model
+forensics_result = analyze_media(video_path, metadata)
 
 # Simple heuristic-based deepfake trigger (placeholder)
 def deepfake_trigger(video_path: str):
